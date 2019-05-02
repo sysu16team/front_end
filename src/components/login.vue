@@ -27,6 +27,67 @@
 
 
 </template>
+<script>
+  var SHA256 = require("crypto-js/sha256");
+  export default {
+    data() {
+      return {
+        ruleValidate: {
+          username: [
+            {required: true, message: '请输入您的用户名',  trigger: 'blur'}
+          ],
+          password: [
+            {required: true, message: '请输入您的密码',  trigger: 'blur'}
+          ],
+        },
+
+        userLoginInfo: {
+          username: '',
+          password: '',
+        }
+
+      };
+    },
+    methods: {
+      login(name, type) {
+        this.$refs[name].validate((valid) => {
+          if (valid) {
+            this.$axios({
+              method: 'post',
+              url: "/api/v1/user/login",
+              data: {
+                type: type,
+                username: this.userLoginInfo.username,
+                password: SHA256(this.userLoginInfo.password).toString()
+              }
+            })
+            .then(msg => {
+              if (msg.data.code == 200) {
+                this.$Message.success(msg.data.msg);
+                this.$router.push({name: 'MainPage'});
+              }
+              else {
+                this.$Message.error(msg.data.msg);
+              }
+            })
+            .catch(err => {
+              console.log(err);
+              this.$Message.error(err.response.statusText);
+            });
+          }
+          else {
+            this.$Message.error('Fail!');
+          }
+        })
+
+      },
+
+      reset (name) {
+        this.$refs[name].resetFields();
+    }
+    }
+  }
+</script>
 
 <style>
 .div-login .ivu-tabs-nav {
