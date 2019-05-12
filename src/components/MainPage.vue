@@ -306,6 +306,29 @@ span {
     },
 
     methods: {
+      jumpToPersonalPage() {
+        this.$router.push({path: `/personalpage/personalinfo`});
+      },
+
+      jumpToUserInfoPage() {
+        this.$router.push({path: `/user/` + this.userInfo.username});
+      },
+
+      jumpToLoginPage() {
+        this.$axios.get('api/v1/user/logout').then(msg => {
+          if (msg.data.code == 200) {
+            this.$router.push({name: `login`});
+            this.$Message.success('退出成功！');
+          }
+          else {
+            this.$router.push({name: `login`});
+            this.$Message.error(msg.data.msg);
+          }
+        }).catch(err => {
+          this.$router.push({name: `login`});
+          this.$Message.error(err.response.statusText);
+        });
+      },
 
       getMessage() {
 
