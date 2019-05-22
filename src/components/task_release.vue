@@ -250,6 +250,128 @@ export default {
         cancel() {
         },
 
+        releaseTask(taskInfo) {
+
+            let isError = false;
+            this.newPublish = false;
+            let endtime_date = new Date(taskInfo.endtime);
+            let starttime_date = new Date();
+
+            if (taskInfo.title == '') {
+                this.$Notice.warning({
+                    title: '缺少任务标题',
+                });
+                isError = true;
+            }
+            if (taskInfo.introduction == '') {
+                this.$Notice.warning({
+                    title: '缺少任务简介',
+                });
+                isError = true;
+            }
+            if (taskInfo.endtime == '' ) {
+                this.$Notice.warning({
+                    title: '缺少任务结束时间',
+                });
+                isError = true;
+            }
+            if (endtime_date < starttime_date) {
+                this.$Notice.warning({
+                    title: '任务时间错误',
+                });
+                isError = true;
+
+            }
+            if (taskInfo.type == 1) {
+                let len = taskInfo.questionnaireurl.length;
+                if (len <= 0) {
+                    this.$Notice.warning({
+                    title: '问卷缺少链接',
+                    });
+                    isError = true;
+                }
+
+            }
+
+            if (this.money < taskInfo.max_accepter_number * taskInfo.money) {
+                this.$Notice.warning({
+                    title: '闲钱币不足',
+                });
+                isError = true;
+            }
+
+            if (!isError)
+            {
+                this.isModalShow = true;
+            }
+        },
+
+
+
+        postTaskInfo(taskInfo) {
+            let endtime = new Date(taskInfo.endtime).Format("yyyy-MM-dd hh:mm:ss");
+            let starttime = new Date().Format("yyyy-MM-dd hh:mm:ss");
+            taskInfo.endtime = endtime;
+            taskInfo.starttime = starttime;
+
+            let vm = this;
+            let url = '';
+            url ='/api/v1/task';
+
+            if(vm.type == 1 && taskInfo.range[0] == 'myOrg') {
+                taskInfo.range = [];
+
+            }
+
+            this.$axios.post(url, {
+                title: taskInfo.title,
+                introduction: taskInfo.introduction,
+                money: taskInfo.money,
+                score: taskInfo.score,
+                max_accepter_number: taskInfo.max_accepter_number,
+                publisher: vm.username,
+                type: taskInfo.type,
+                starttime: taskInfo.starttime,
+                endtime: taskInfo.endtime,
+                content: taskInfo.content,
+                questionnaire_path: taskInfo.questionnaireurl,
+                range: taskInfo.range
+            })
+
+            .then(function(response) {
+                let data = response.data;
+                if (data.code == 200) {
+                        vm.$Notice.success({
+                        title: '任务成功发布',
+                    });
+                    vm.showTaskDetail(data.data.task_id);
+                }
+
+            })
+            .catch(function (error) {
+                if (error.response.status == 401) {
+
+                    vm.$Notice.warning({
+                        title: '出现错误',
+                        desc:  "请重新登录"
+                    });
+                    vm.$router.push({name: 'login'});
+
+                }
+            });
+        },
+
+        showTaskDetail(tid){
+            this.$router.push({path: `/MainPage/task_detail/${tid}`});
+        },
+
+        sendToMainPage() {
+            let data = {
+                active: '1-2',
+                open: '1'
+            };
+            this.$emit('menuSelected', data);
+        }
 
 
     }
