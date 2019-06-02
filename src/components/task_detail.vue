@@ -144,6 +144,58 @@
                     </div>
                 </div>
             </div>
+            <div v-if="isShowDetail">
+                <Divider></Divider>
+                <span style="font-size:17px; font-weight:bold;">任务完成情况</span>
+                <div class="table-whole" >
+                    <div class="table-header">
+                        <table style="width: 100%;" border="1px" cellspacing="0" >
+                            <thead>
+                                <tr>
+                                    <th  style="width:30%">
+                                        <div class="labelHead">
+                                            <span>用户</span>
+                                        </div>
+                                    </th>
+                                    <th  style="width:30%">
+                                        <div class="labelHead">
+                                            <span>任务状态</span>
+                                        </div>
+                                    </th>
+                                    <th style="width:40%">
+                                        <span>确认完成任务</span>
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr v-for="(item,index) in trs">
+                                    <td  style="width:30%">
+                                        <div class="labelHead">
+                                            <Avatar :src="item.avatar"></Avatar>
+                                            <strong>{{ item.username }}</strong>
+                                        </div>
+                                    </td>
+                                    <td  style="width:30%">
+                                        <div class="labelHead">
+                                            <span style="margin-left: 75px;">{{ item.label }}</span>
+                                        </div>
+                                    </td>
+                                    <td style="width:40%">
+                                        <div class="labelHead" style="display: flex">
+                                                 <Button type="primary" style="width: 50%; margin-left: 25%;" :disabled="item.state != 1" @click="confirmTaskMutiple(scoreValue)">确认完成</Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+            <div style="position: relative; margin-left:910px; margin-top:10px;">
+                    <Button type="success"  @click="confirmTaskMutiple(scoreValue)">一键确认</Button>
+            </div>
+            </div>
             <div class="taskBtn">
                 <Button @click="isShowDetail = !isShowDetail" type="info" v-show="isReleaser" >任务情况</Button>
                 <div>
@@ -367,7 +419,6 @@ export default {
         },
 
 
-
         getTaskRelation: function() {
             let vm = this;
             let url = '/api/v1/task/accepter'
@@ -399,32 +450,6 @@ export default {
             });
         },
 
-        confirmTaskSingle:function(username_, score_, index) {
-            let username_arr = []
-            let index_arr = []
-            let score_arr =[]
-            username_arr.push(username_);
-            index_arr.push(index);
-            score_arr.push(score_)
-
-            this.confirmTask(username_arr, score_arr, index_arr);
-
-        },
-
-        confirmTaskMutiple(score_) {
-            let username_arr = [];
-            let index_arr = [];
-            let score_arr = [];
-
-            for(let i = 0;i < this.trs.length;i ++) {
-                if (this.trs[i].state == 1) {
-                    username_arr.push(this.trs[i].username);
-                    index_arr.push(i);
-                    score_arr.push(score_);
-                }
-            }
-            this.confirmTask(username_arr, score_arr, index_arr);
-        },
 
         jumpToReleaserInfo() {
             this.$router.push({name: 'userinfo', params: {username: this.task.publisher}});
