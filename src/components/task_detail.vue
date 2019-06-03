@@ -419,6 +419,183 @@ export default {
         },
 
 
+        acceptTask: function() {
+
+            let vm = this;
+            let url = '/api/v1/task/acceptance';
+
+            this.$axios.post(url, {
+                headers: {
+                    'accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                username: vm.userInfo.username,
+                task_id: vm.task.task_id
+            })
+            .then(function(response) {
+                let data = response.data;
+                let msg = data.msg;
+                if (data.code == 200) {
+                    vm.$Notice.success({
+                        title: '任务接受成功',
+                    });
+                    vm.reload();
+
+                } else{
+                    vm.$Notice.warning({
+                        title: msg,
+                    });
+                    vm.reload();
+                }
+
+            })
+            .catch(function (error) {
+                if (error.response.status == 401) {
+                    vm.$Notice.warning({
+                        title: '错误',
+                        desc:  "请重新登录"
+                    });
+                    vm.$router.push({name: 'login'});
+
+               } else if (error.response.status == 500) {
+                   if(error.response.data.data == 'Max accepter number reached') {
+                       vm.$Notice.warning({
+                            title: '任务人数已满',
+                        });
+                        vm.reload();
+                   } else {
+                        vm.$Notice.warning({
+                            title: '任务不存在',
+                        });
+                        vm.$router.go(-1);
+                    }
+                }
+            });
+        },
+
+        completeTask: function() {
+            if (this.task.state == 4) {
+                this.$Notice.warning({
+                        title: '任务超过时限',
+                    });
+                vm.$router.push({name: 'login'});
+                return;
+            }
+            let vm = this;
+            let url = '/api/v1/task/complement'
+            this.$axios.post(url, {
+                task_id: vm.task_id,
+                username: vm.userInfo.username
+
+            })
+            .then(function(response) {
+                let data = response.data;
+                let msg = data.msg;
+                if (data.code == 200) {
+                    vm.$Notice.success({
+                        title: '任务待确认',
+                    });
+                    vm.reload();
+                } else{
+                    vm.$Notice.warning({
+                        title: 'error',
+                    });
+                    vm.reload();
+                }
+
+            })
+            .catch(function (error) {
+                if (error.response.status == 401) {
+                    vm.$Notice.warning({
+                        title: '错误',
+                        desc:  "请重新登录"
+                    });
+                    vm.$router.push({name: 'login'});
+
+                } else if (error.response.status == 402) {
+                    vm.$Notice.warning({
+                        title: '超时错误',
+                    });
+                    }
+                });
+        },
+
+
+        quitingTask:function() {
+            let vm = this;
+            let url = '/api/v1/task/acceptance';
+
+            this.$axios.delete(url, {
+                params: {
+                    username: vm.userInfo.username,
+                    task_id: vm.task.task_id
+                }
+            })
+            .then(function(response) {
+                let data = response.data;
+                let msg = data.msg;
+                if (data.code == 200) {
+                    vm.$Notice.success({
+                        title: '已退出任务',
+                    });
+                    vm.reload();
+                } else{
+                    vm.$Notice.warning({
+                        title: msg,
+                    });
+                    vm.reload();
+                }
+
+            })
+            .catch(function (error) {
+                if (error.response.status == 401) {
+
+                    vm.$Notice.warning({
+                        title: '错误',
+                        desc:  "请重新登录"
+                    });
+                    vm.$router.push({name: 'login'});
+                }
+            });
+        },
+
+        cancelTask:function() {
+            let vm = this;
+            let url = '/api/v1/task';
+
+            this.$axios.delete(url, {
+                params: {
+                    task_id: vm.task_id
+                }
+            })
+            .then(function(response) {
+                let data = response.data;
+                let msg = data.msg;
+                if (data.code == 200) {
+                    vm.$Notice.success({
+                        title: '任务已删除',
+                    });
+                    vm.$router.push({name: 'task_search'});
+                } else if(data.code == 401){
+                    vm.$Notice.warning({
+                        title: msg,
+                    });
+                }
+
+            })
+            .catch(function (error) {
+                if (error.response.status == 401) {
+
+                    vm.$Notice.warning({
+                        title: '错误',
+                        desc:  "请重新登录"
+                    });
+                    vm.$router.push({name: 'login'});
+                }
+            });
+        },
+
+
         getTaskRelation: function() {
             let vm = this;
             let url = '/api/v1/task/accepter'
@@ -450,6 +627,93 @@ export default {
             });
         },
 
+        confirmTaskSingle:function(username_, score_, index) {
+            let username_arr = []
+            let index_arr = []
+            let score_arr =[]
+            username_arr.push(username_);
+            index_arr.push(index);
+            score_arr.push(score_)
+
+            this.confirmTask(username_arr, score_arr, index_arr);
+
+        },
+
+        confirmTaskMutiple(score_) {
+            let username_arr = [];
+            let index_arr = [];
+            let score_arr = [];
+
+            for(let i = 0;i < this.trs.length;i ++) {
+                if (this.trs[i].state == 1) {
+                    username_arr.push(this.trs[i].username);
+                    index_arr.push(i);
+                    score_arr.push(score_);
+                }
+            }
+            this.confirmTask(username_arr, score_arr, index_arr);
+        },
+
+        confirmTask(username_arr, score_arr, index_arr) {
+            let vm = this;
+            let url = '/api/v1/task/comfirm'
+            this.$axios.post(url, {
+                username: username_arr,
+                score: score_arr,
+                task_id: vm.task_id
+            })
+
+            .then(function(response) {
+                let data = response.data;
+                let msg = data.msg;
+                if (data.code == 200) {
+                     vm.$Notice.success({
+                        title: '任务已确认',
+                    });
+                    for (let i = 0;i < index_arr.length;i ++) {
+                         vm.trs[index_arr[i]].state = 2;
+                         vm.trs[index_arr[i]].label = "任务已完成";
+                    }
+
+
+                    if (vm.trs.length < vm.task.max_accepter_number) {
+                        vm.isCompleted = false;
+                        return;
+                    }
+
+                    let isCompleted = true;
+                    for (let i = 0;i < vm.trs.length;i ++) {
+                        if (vm.trs[i].state != 2) {
+                            isCompleted = false;
+                            break;
+                        }
+                    }
+
+                    if (isCompleted) {
+                        vm.isCompleted = true;
+                    }
+
+
+                }  else {
+                    vm.$Notice.warning({
+                        title: 'Task Comfirm',
+                        desc:  msg
+                    });
+                }
+
+            })
+            .catch(function (error) {
+                if (error.response.status == 401) {
+
+                    vm.$Notice.warning({
+                        title: 'Task Confirm',
+                        desc:  "Please Login first"
+                    });
+                    vm.$router.push({name: 'login'});
+
+                }
+            });
+        },
 
         jumpToReleaserInfo() {
             this.$router.push({name: 'userinfo', params: {username: this.task.publisher}});
