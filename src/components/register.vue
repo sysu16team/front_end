@@ -13,7 +13,7 @@
               <label class="img-upload-box " for="fileInput">
                 <Icon type="ios-camera" size="30"></Icon>
               </label>
-              <input id="fileInput" type="file" @change="avatarImgUpload">
+              <input id="fileInput" type="file">
             </div>
           </Col>
           <Col span="10">
